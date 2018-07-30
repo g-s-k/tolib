@@ -1,4 +1,43 @@
 #!/usr/bin/env python3
 
+""" imports """
+import mutagen
+import os
+import pathlib
+import typing
+
+""" helper functions """
+def get_music_files(pth: pathlib.Path) -> typing.List[mutagen.FileType]:
+    files = [mutagen.File(f) for f in os.listdir(pth) if os.path.isfile(f)]
+    return [f for f in files if f is not None]
+
+def build_dirname(f: mutagen.FileType) -> pathlib.Path:
+    d = dict(f)
+    rel_pth = []
+    # albumartist with fallback of track artist
+    artist = d.get("albumartist", d.get("artist", None))
+    if artist is None:
+        artist = input("Enter album artist: ")
+    else:
+        artist = artist[0]
+    rel_pth.append(artist)
+    # album
+    album = d.get("album", None)
+    if album is None:
+        album = input("Enter album name: ")
+    else:
+        album = album[0]
+    rel_pth.append(album)
+    return pathlib.Path(os.path.join(*rel_pth))
+
+""" main function """
+def main() -> None:
+    files = get_music_files(".")
+    if len(files) == 0:
+        return
+    new_dir = build_dirname(files[0])
+    print(new_dir)
+
+""" if invoked """
 if __name__ == "__main__":
-    print("this is a music management tool")
+    main()
