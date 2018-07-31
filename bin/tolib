@@ -28,6 +28,7 @@ def build_dirname(f: mutagen.FileType) -> pathlib.Path:
     artist = d.get("albumartist", d.get("artist", None))
     rel_pth.append(input("Enter album artist: ") if artist is None else artist[0])
     # album
+    album = d.get("album", None)
     rel_pth.append(input("Enter album name: ") if album is None else album[0])
     return pathlib.Path(os.path.join(*rel_pth))
 
@@ -47,11 +48,18 @@ def main() -> None:
         confirm = input("\nDestination already exists. Continue? [y/N]: ")
         if not strtobool(confirm):
             return
+        else:
+            print("")
         # remove existing mp3 files
-        for mp3 in glob.glob(os.path.join(new_dir, "*.mp3")):
+        for mp3 in glob.iglob(os.path.join(new_dir, "*.mp3")):
             os.remove(mp3)
     else:
         os.makedirs(new_dir)
+    # copy over new files
+    files_to_copy = glob.iglob(os.path.join(work_dir, "*.flac"))
+    for file in files_to_copy:
+        if os.path.isfile(file):
+            shutil.copy2(file, new_dir)
     print("ok!")
 
 """ if invoked """
