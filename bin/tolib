@@ -8,10 +8,12 @@ import typing
 
 """ helper functions """
 def get_music_files(pth: pathlib.Path) -> typing.List[mutagen.FileType]:
+    """get all music files in the current directory"""
     files = [mutagen.File(f) for f in os.listdir(pth) if os.path.isfile(f)]
     return [f for f in files if f is not None]
 
 def build_dirname(f: mutagen.FileType) -> pathlib.Path:
+    """make a (naively constructed) directory name from metadata in a file"""
     d = dict(f)
     rel_pth = []
     # albumartist with fallback of track artist
@@ -32,11 +34,11 @@ def build_dirname(f: mutagen.FileType) -> pathlib.Path:
 
 """ main function """
 def main() -> None:
-    files = get_music_files(".")
+    files = get_music_files(pathlib.Path("."))
     if len(files) == 0:
         return
     new_dir = build_dirname(files[0])
-    print(new_dir)
+    print("\nDestination directory: {0}\n".format(new_dir))
 
 """ if invoked """
 if __name__ == "__main__":
