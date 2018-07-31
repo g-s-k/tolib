@@ -7,6 +7,7 @@ import mutagen
 import os
 import pathlib
 import shutil
+import sys
 import typing
 
 """ constants """
@@ -25,24 +26,17 @@ def build_dirname(f: mutagen.FileType) -> pathlib.Path:
     rel_pth = [_lib_directory]
     # albumartist with fallback of track artist
     artist = d.get("albumartist", d.get("artist", None))
-    if artist is None:
-        artist = input("Enter album artist: ")
-    else:
-        artist = artist[0]
-    rel_pth.append(artist)
+    rel_pth.append(input("Enter album artist: ") if artist is None else artist[0])
     # album
-    album = d.get("album", None)
-    if album is None:
-        album = input("Enter album name: ")
-    else:
-        album = album[0]
-    rel_pth.append(album)
+    rel_pth.append(input("Enter album name: ") if album is None else album[0])
     return pathlib.Path(os.path.join(*rel_pth))
 
 """ main function """
 def main() -> None:
+    # decide where to work
+    work_dir = sys.argv[1] if len(sys.argv) > 1 else "."
     # get the files
-    files = get_music_files(pathlib.Path("."))
+    files = get_music_files(pathlib.Path(work_dir))
     if len(files) == 0:
         return
     # decide on a destination
