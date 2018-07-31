@@ -10,6 +10,7 @@ setup(
     packages = find_packages(),
     scripts = ['bin/tolib'],
     install_requires = [
-        'mutagen==1.41.0'
+        'mutagen==1.41.0',
+        'Pillow==5.3.0'
     ]
 )

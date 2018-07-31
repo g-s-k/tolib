@@ -6,6 +6,7 @@ import glob
 import mutagen
 import os
 import pathlib
+from PIL import Image
 import shutil
 import sys
 import typing
@@ -13,12 +14,24 @@ import typing
 """ constants """
 _lib_directory = pathlib.Path(
     os.getenv("MUSIC_LIBRARY", os.path.join(pathlib.Path.home(), "Music")))
+_img_extensions = ("png", "jpg", "jpeg")
 
 """ helper functions """
 def get_music_files(pth: pathlib.Path) -> typing.List[mutagen.FileType]:
     """get all music files in the current directory"""
     files = [mutagen.File(f) for f in os.listdir(pth) if os.path.isfile(f)]
     return [f for f in files if f is not None]
+
+def get_img_files(pth: pathlib.Path) -> typing.List[pathlib.Path]:
+    """get all image files in the current directory"""
+    patterns = [glob.iglob(os.path.join(pth, "*." + e)) for e in _img_extensions]
+    de_nested = [f for f_ in patterns for f in f_]
+    return de_nested
+
+def get_img_size(pth: pathlib.Path) -> int:
+    """get image size"""
+    sz = Image.open(pth).size
+    return sz[0] * sz[1]
 
 def build_dirname(f: mutagen.FileType) -> pathlib.Path:
     """make a (naively constructed) directory name from metadata in a file"""
@@ -60,7 +73,15 @@ def main() -> None:
     for file in files_to_copy:
         if os.path.isfile(file):
             shutil.copy2(file, new_dir)
-    print("ok!")
+    # handle album art
+    new_art = get_img_files(new_dir)
+    art = {f: get_img_size(f) for f in get_img_files(work_dir) + new_art}
+    biggest_img = max(art, key=lambda k: art[k])
+    if os.path.dirname(biggest_img) is work_dir:
+        for f in new_art:
+            os.remove(f)
+        _, art_ext = os.path.splitext(biggest_img)
+        shutil.copy2(biggest_img, os.path.join(new_dir, "cover" + art_ext))
 
 """ if invoked """
 if __name__ == "__main__":
