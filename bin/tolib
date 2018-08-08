@@ -75,6 +75,11 @@ def clean_tags(f: mutagen.FileType) -> mutagen.FileType:
     for key in f.keys():
         if key.lower() in _awful_tags or any(re.search(p, key.lower()) is not None for p in _awful_categories):
             f.pop(key)
+    # fix date tag
+    if len(f.get("date", ["0000"])[0]) > 4:
+        date = f.pop("date")
+        date[0] = date[0][:4]
+        f["date"] = date
     return f
 
 """ main function """
@@ -116,7 +121,6 @@ def main() -> None:
         _, art_ext = os.path.splitext(biggest_img)
         shutil.copy2(biggest_img, os.path.join(new_dir, "cover" + art_ext))
     # clean up the tags
-    print(new_dir)
     new_files = [clean_tags(f) for f in get_music_files(pathlib.Path(new_dir))]
     for f in new_files:
         f.save()
