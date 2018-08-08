@@ -7,6 +7,7 @@ import mutagen
 import os
 import pathlib
 from PIL import Image
+import re
 import shutil
 import sys
 import typing
@@ -19,7 +20,8 @@ _img_extensions = ("png", "jpg", "jpeg")
 """ helper functions """
 def get_music_files(pth: pathlib.Path) -> typing.List[mutagen.FileType]:
     """get all music files in the current directory"""
-    files = [mutagen.File(f) for f in os.listdir(pth) if os.path.isfile(f)]
+    file_names = [os.path.join(pth, f) for f in os.listdir(pth)]
+    files = [mutagen.File(f) for f in file_names if os.path.isfile(f)]
     return [f for f in files if f is not None]
 
 def get_img_files(pth: pathlib.Path) -> typing.List[pathlib.Path]:
@@ -45,6 +47,36 @@ def build_dirname(f: mutagen.FileType) -> pathlib.Path:
     rel_pth.append(input("Enter album name: ") if album is None else album[0])
     return pathlib.Path(os.path.join(*rel_pth))
 
+def clean_tags(f: mutagen.FileType) -> mutagen.FileType:
+    """remove useless or annoying tags, split multiples, etc."""
+    _awful_tags = (
+        "comment",
+        "genre",
+        "isrc",
+        "upc",
+        "barcode",
+        "organization",
+        "copyright",
+        "bpm",
+        "length",
+        "website",
+        "www"
+    )
+    _awful_categories = (
+        "musicbrainz_.*",
+        "replaygain_.*",
+        "catalog.*",
+        "beatport.*",
+        ".*label.*",
+        "encod.*",
+        ".*key.*",
+        "itunes.*"
+    )
+    for key in f.keys():
+        if key.lower() in _awful_tags or any(re.search(p, key.lower()) is not None for p in _awful_categories):
+            f.pop(key)
+    return f
+
 """ main function """
 def main() -> None:
     # decide where to work
@@ -55,6 +87,7 @@ def main() -> None:
         return
     # decide on a destination
     new_dir = build_dirname(files[0])
+    del files
     print("\nDestination directory: {0}\n".format(new_dir))
     # check for a collision
     if os.path.exists(new_dir):
@@ -82,6 +115,11 @@ def main() -> None:
             os.remove(f)
         _, art_ext = os.path.splitext(biggest_img)
         shutil.copy2(biggest_img, os.path.join(new_dir, "cover" + art_ext))
+    # clean up the tags
+    print(new_dir)
+    new_files = [clean_tags(f) for f in get_music_files(pathlib.Path(new_dir))]
+    for f in new_files:
+        f.save()
 
 """ if invoked """
 if __name__ == "__main__":
