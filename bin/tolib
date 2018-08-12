@@ -9,6 +9,7 @@ import pathlib
 from PIL import Image
 import re
 import shutil
+import subprocess
 import sys
 import typing
 
@@ -124,6 +125,8 @@ def main() -> None:
     new_files = [clean_tags(f) for f in get_music_files(pathlib.Path(new_dir))]
     for f in new_files:
         f.save()
+    # open Ex Falso to handle everything else manually
+    subprocess.run(["exfalso", new_dir], stderr=subprocess.DEVNULL)
 
 """ if invoked """
 if __name__ == "__main__":
