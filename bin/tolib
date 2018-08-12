@@ -83,6 +83,23 @@ def clean_tags(f: mutagen.FileType) -> mutagen.FileType:
         f["date"] = date
     return f
 
+def rename_file(f: pathlib.Path) -> str:
+    """make a filename out of a song's metadata"""
+    m = mutagen.File(f)
+    if m is None: return
+    new_name_parts = []
+    if "tracknumber" in m:
+        if "discnumber" in m:
+            new_name_parts.append(pad_num_str(m["discnumber"][0]) + ".")
+        new_name_parts.append(pad_num_str(m["tracknumber"][0]) + " - ")
+    new_name_parts.append(m["title"][0])
+    if "version" in m:
+        new_name_parts.append(" - " + " - ".join(m["version"]))
+    return "".join(new_name_parts)
+
+def pad_num_str(s: str) -> str:
+    return "{0:02d}".format(int(s))
+
 """ main function """
 def main() -> None:
     # decide where to work
@@ -125,8 +142,17 @@ def main() -> None:
     new_files = [clean_tags(f) for f in get_music_files(pathlib.Path(new_dir))]
     for f in new_files:
         f.save()
+    del new_files
     # open Ex Falso to handle everything else manually
     subprocess.run(["exfalso", new_dir], stderr=subprocess.DEVNULL)
+    # rename files
+    final_files_n = [glob.iglob(os.path.join(pathlib.Path(new_dir, "*." + e))) for e in ["mp3", "flac"]]
+    final_files = [f for f_ in final_files_n for f in f_]
+    for f in final_files:
+        new_name = rename_file(f)
+        if new_name is not None:
+            f_ext = os.path.splitext(f)[-1]
+            shutil.move(f, os.path.join(new_dir, new_name + f_ext))
 
 """ if invoked """
 if __name__ == "__main__":
