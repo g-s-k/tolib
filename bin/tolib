@@ -81,6 +81,21 @@ def clean_tags(f: mutagen.FileType) -> mutagen.FileType:
         date = f.pop("date")
         date[0] = date[0][:4]
         f["date"] = date
+    # fix title
+    if "title" in f:
+        title = f.pop("title")[0]
+        # remove "original mix"
+        title = re.sub("\s*(-\s*|\()[Oo]riginal( [Mm]ix)?\)?\s*$", "", title)
+        # split out featured artist
+        tmp_featured = re.split("\s*\(feat(\.|uring)?\s*", title)
+        if len(tmp_featured) == 2:
+            title = tmp_featured[0]
+            featured = re.sub("\s*\)\s*$", "", tmp_featured[1])
+            if "performer" in f:
+                f["performer"].append(featured)
+            else:
+                f["performer"] = [featured]
+        f["title"] = [title]
     return f
 
 def rename_file(f: pathlib.Path) -> str:
