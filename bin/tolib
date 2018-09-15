@@ -74,7 +74,9 @@ def clean_tags(f: mutagen.FileType) -> mutagen.FileType:
         "itunes.*"
     )
     for key in f.keys():
-        if key.lower() in _awful_tags or any(re.search(p, key.lower()) is not None for p in _awful_categories):
+        if key.lower() in _awful_tags or any(re.search(p, key.lower())
+                                             is not None
+                                             for p in _awful_categories):
             f.pop(key)
     # fix date tag
     if len(f.get("date", ["0000"])[0]) > 4:
@@ -146,13 +148,14 @@ def main() -> None:
             shutil.copy2(file, new_dir)
     # handle album art
     new_art = get_img_files(new_dir)
-    art = {f: get_img_size(f) for f in get_img_files(work_dir) + new_art}
-    biggest_img = max(art, key=lambda k: art[k])
-    if os.path.dirname(biggest_img) is work_dir:
-        for f in new_art:
-            os.remove(f)
-        _, art_ext = os.path.splitext(biggest_img)
-        shutil.copy2(biggest_img, os.path.join(new_dir, "cover" + art_ext))
+    if len(new_art) > 0:
+        art = {f: get_img_size(f) for f in get_img_files(work_dir) + new_art}
+        biggest_img = max(art, key=lambda k: art[k])
+        if os.path.dirname(biggest_img) is work_dir:
+            for f in new_art:
+                os.remove(f)
+            _, art_ext = os.path.splitext(biggest_img)
+            shutil.copy2(biggest_img, os.path.join(new_dir, "cover" + art_ext))
     # clean up the tags
     new_files = [clean_tags(f) for f in get_music_files(pathlib.Path(new_dir))]
     for f in new_files:
@@ -161,7 +164,8 @@ def main() -> None:
     # open Ex Falso to handle everything else manually
     subprocess.run(["exfalso", new_dir], stderr=subprocess.DEVNULL)
     # rename files
-    final_files_n = [glob.iglob(os.path.join(pathlib.Path(new_dir, "*." + e))) for e in ["mp3", "flac"]]
+    final_files_n = [glob.iglob(os.path.join(pathlib.Path(new_dir, "*." + e)))
+                     for e in ["mp3", "flac"]]
     final_files = [f for f_ in final_files_n for f in f_]
     for f in final_files:
         new_name = rename_file(f)
