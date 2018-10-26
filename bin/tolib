@@ -116,9 +116,9 @@ def rename_file(f: pathlib.Path) -> str:
         if "discnumber" in m:
             new_name_parts.append(pad_num_str(m["discnumber"][0]) + ".")
         new_name_parts.append(pad_num_str(m["tracknumber"][0]) + " - ")
-    new_name_parts.append(m["title"][0])
+    new_name_parts.append(m["title"][0].replace("/", "_"))
     if "version" in m:
-        new_name_parts.append(" - " + " - ".join(m["version"]))
+        new_name_parts.append(" - " + " - ".join(m["version"]).replace("/", "_"))
     return "".join(new_name_parts)
 
 def pad_num_str(s: str) -> str:
