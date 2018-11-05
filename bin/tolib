@@ -154,9 +154,10 @@ def main() -> None:
         if os.path.isfile(file):
             shutil.copy2(file, new_dir)
     # handle album art
+    work_art = get_img_files(work_dir)
     new_art = get_img_files(new_dir)
-    if len(new_art) > 0:
-        art = {f: get_img_size(f) for f in get_img_files(work_dir) + new_art}
+    if len(new_art + work_art) > 0:
+        art = {f: get_img_size(f) for f in work_art + new_art}
         biggest_img = max(art, key=lambda k: art[k])
         if os.path.dirname(biggest_img) is work_dir:
             for f in new_art:
